@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>새봄 디스코드 퀴즈 입장</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .rule-card {
+      background: linear-gradient(135deg, #f9fafb, #f1f5f9);
+      border-left: 4px solid #60a5fa;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen pt-0">
+
+  <!-- 공지사항 영역 -->
+  <div class="max-w-3xl mx-auto mt-0 px-4 py-6 bg-white/90 backdrop-blur-md shadow-xl rounded-xl">
+    <h1 class="text-3xl font-extrabold text-center text-blue-800 mb-8">VIP 공지사항</h1>
+    <ul id="rules" class="grid gap-3 text-[15px] text-gray-800 leading-relaxed mb-8"></ul>
+    <div class="text-center">
+      <button
+        onclick="openModal()"
+        class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-8 rounded-lg shadow-md transition-transform active:scale-95"
+      >
+        ✅ 위 내용을 모두 숙지하였습니다
+      </button>
+    </div>
+  </div>
+
+  <!-- 퀴즈 모달 -->
+  <div
+    id="modal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden px-4"
+  >
+    <div
+      id="modalBox"
+      class="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg p-6 shadow-xl relative scale-95 opacity-0 transition-all duration-300"
+    >
+      <button
+        onclick="closeModal()"
+        class="absolute top-2 right-4 text-gray-400 hover:text-gray-800 text-xl"
+        >&times;</button
+      >
+      <h2 class="text-2xl font-bold mb-6 text-blue-700 text-center">
+        디스코드 입장 전 사전 퀴즈
+      </h2>
+      <div id="quizSection" class="space-y-6"></div>
+    </div>
+  </div>
+
+  <!-- 오답 모달 -->
+  <div
+    id="errorModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden px-4"
+  >
+    <div
+      class="bg-white w-full max-w-sm rounded-lg p-6 shadow-xl text-center relative"
+    >
+      <button
+        id="closeError"
+        class="absolute top-2 right-4 text-gray-400 hover:text-gray-800 text-xl"
+        >&times;</button
+      >
+      <p class="text-red-600 font-semibold text-xl mb-4">
+        ❌ 일부 문제의 정답이 틀렸습니다.
+      </p>
+      <button
+        onclick="closeErrorModal()"
+        class="mt-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-6 rounded-lg transition-transform active:scale-95"
+      >
+        다시 풀기
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 공지사항 내용
+    const rules = [
+  "<strong>닉네임 양식</strong><br><code>'닉네임 나이 성별'</code> 형식으로 설정<br><em>ex) 설 아 먕 27 여, 지슈 01 남</em><br><span class='text-red-500'>※ 닉네임 중복, 영어, 초성, 슬래시는 금지합니다.</span>",
+        "<strong>방하트 인증</strong><br>우측 상단 ≡ → 커버보기 → ♡ → ♥<br>캡처 후 카톡방에 스샷 첨부<br><span class='text-red-500'>📌 위 두 가지 없이 디코 생성 시 추방</span>",
+        "<strong>끼리끼리 금지</strong><br>지나친 친목 및 무리 문화는 금지됩니다.",
+        "<strong>비매너 접속</strong><br>디코/카톡 들락, 역할 지연, 언급 무응답 시 추방",
+        "<strong>입장 연령 제한</strong><br>06년생부터 입장 가능합니다.",
+        "<strong>문의사항</strong><br>디코 [건의사항ㅣ티켓열기] 채널 이용<br><em>(운영자 '설 아 먕'만 열람 가능)</em>",
+        "<strong>자삭 금지</strong><br>단톡방 메시지 삭제 금지<br><span class='text-gray-500'>※ 관리자 소환 후 가리기 요청</span>",
+        "<strong>비정상 행위</strong><br>여미새, 남미새, 핵, 불법 프로그램, 인성 문제 시 경고 없이 추방<br><em>(제보 바랍니다)</em>",
+        "<strong>외부 유도 금지</strong><br>새봄 서버원을 타 채널(디코, 보이스톡 등)로 유도하거나 추방자와 플레이 시 추방",
+        "<strong>피시방/소음</strong><br>소음 환경에서 입장 전 디코 입력감도 조절 부탁드립니다.",
+        "<strong>장기미접속 예정</strong><br>[📝ㅣ사유작성] 채널에 사유 양식 작성<br><code>사유종류 : 장기미접속<br>사유 : 군입대(전역일:YY.MM.DD)<br>or 여행 (YY.MM.DD~YY.MM.DD)</code>"
+      ];
+
+    // 퀴즈 데이터
+    const quizData = [
+      {
+        id: 1,
+        question: "닉네임 설정 시 올바른 양식은 무엇인가요?",
+        options: [
+          "닉네임만 적는다",
+          "'닉네임 나이 성별' 순으로 작성한다",
+          "영문 또는 초성으로 작성한다",
+          "슬래시(/) 포함"
+        ],
+        answer: 1,
+      },
+      {
+        id: 2,
+        question: "방하트 인증 방법으로 옳은 것은?",
+        options: [
+          "디스코드 메시지 캡처",
+          "프로필 사진 변경",
+          "≡ → 커버보기 → ♡ → ♥ 캡처 후 카톡방에 제출",
+          "운영자에게 말로 전달",
+        ],
+        answer: 2,
+      },
+      {
+        id: 3,
+        question: "다음 중 퇴장 사유가 아닌 것은?",
+        options: [
+          "끼리끼리 친목",
+          "닉네임 중복",
+          "운영자에게 문의",
+          "언급 무응답",
+        ],
+        answer: 2,
+      },
+      {
+        id: 4,
+        question: "입장 가능한 최소 연령은?",
+        options: ["08년생", "07년생", "06년생", "05년생"],
+        answer: 2,
+      },
+      {
+        id: 5,
+        question: "장기 미접속 시 해야 할 일은?",
+        options: [
+          "아무 말 없이 나간다",
+          "[📝ㅣ사유작성] 채널에 양식 작성",
+          "친한사람에게 말한다",
+          "카톡 이모티콘만 보낸다",
+        ],
+        answer: 1,
+      },
+    ];
+
+    // 공지사항 리스트 출력
+    document.addEventListener("DOMContentLoaded", () => {
+      const rulesContainer = document.getElementById("rules");
+      rules.forEach((rule, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<div class='rule-card w-full'><strong class='text-blue-600'>${index + 1}.</strong> ${rule}</div>`;
+        rulesContainer.appendChild(li);
+      });
+    });
+
+    // 모달 열기
+    function openModal() {
+      const modal = document.getElementById("modal");
+      const modalBox = document.getElementById("modalBox");
+      modal.classList.remove("hidden");
+      setTimeout(() => {
+        modalBox.classList.remove("scale-95", "opacity-0");
+        modalBox.classList.add("scale-100", "opacity-100");
+      }, 10);
+      document.addEventListener("keydown", escClose);
+      startQuiz();
+    }
+
+    // 모달 닫기
+    function closeModal() {
+      const modal = document.getElementById("modal");
+      const modalBox = document.getElementById("modalBox");
+      modalBox.classList.remove("scale-100", "opacity-100");
+      modalBox.classList.add("scale-95", "opacity-0");
+      setTimeout(() => {
+        modal.classList.add("hidden");
+      }, 300);
+      document.removeEventListener("keydown", escClose);
+    }
+
+    // ESC 키로 모달 닫기
+    function escClose(e) {
+      if (e.key === "Escape") closeModal();
+    }
+
+    // 퀴즈 출력
+    function startQuiz() {
+      const quizSection = document.getElementById("quizSection");
+      quizSection.innerHTML = "";
+
+      quizData.forEach((q, i) => {
+        const div = document.createElement("div");
+        div.className = "p-4 border rounded-lg shadow-sm bg-gray-50";
+        let optionsHTML = "";
+        q.options.forEach((opt, idx) => {
+          optionsHTML += `
+            <div class="flex items-center gap-2 mt-2">
+              <input type="radio" id="q${i}_${idx}" name="q${i}" value="${idx}" class="text-blue-500" />
+              <label for="q${i}_${idx}" class="text-sm cursor-pointer">${opt}</label>
+            </div>`;
+        });
+        div.innerHTML = `<p class="font-semibold mb-2 text-blue-800">Q${i + 1}. ${q.question}</p>${optionsHTML}`;
+        quizSection.appendChild(div);
+      });
+
+      quizSection.innerHTML += `
+        <div class="text-center mt-6">
+          <button onclick="checkQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow-md transition">
+            제출하기
+          </button>
+        </div>`;
+    }
+
+    // 퀴즈 정답 체크
+    function checkQuiz() {
+      const incorrect = [];
+
+      quizData.forEach((q, i) => {
+        const selected = document.querySelector(`input[name='q${i}']:checked`);
+        if (!selected || parseInt(selected.value) !== q.answer) {
+          incorrect.push(i + 1);
+        }
+      });
+
+      if (incorrect.length === 0) {
+        // 정답 맞으면 디스코드 초대 링크로 이동
+        window.location.href = "https://discord.gg/fjYYknA2PU";
+      } else {
+        // 틀렸으면 오답 모달 열기
+        document.getElementById("errorModal").classList.remove("hidden");
+      }
+    }
+
+    // 오답 모달 닫기
+    document.getElementById("closeError").addEventListener("click", closeErrorModal);
+    function closeErrorModal() {
+      document.getElementById("errorModal").classList.add("hidden");
+    }
+  </script>
+</body>
+</html>
